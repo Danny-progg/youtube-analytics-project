@@ -24,10 +24,6 @@ class Channel:
         self.view_count = channel['items'][0]['statistics']['viewCount']
 
 
-    def __str__(self):
-        return f'{self.title}({self.url})'
-
-
     def __str__(self) -> str:
         return f"{self.title} ({self.url})"
 
