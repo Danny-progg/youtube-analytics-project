@@ -24,20 +24,43 @@ class Channel:
         self.view_count = channel['items'][0]['statistics']['viewCount']
 
 
+    def __str__(self):
+        return f'{self.title}({self.url})'
+
+
+    def __str__(self) -> str:
+        return f"{self.title} ({self.url})"
+
+    def __add__(self, other: type(object)) -> int:
+        return int(self.count_subscribers) + int(other.count_subscribers)
+
+    def __sub__(self, other: type(object)) -> int:
+        return int(self.count_subscribers) - int(other.count_subscribers)
+
+    def __gt__(self, other) -> bool:
+        return int(self.count_subscribers) > int(other.count_subscribers)
+
+    def __ge__(self, other) -> bool:
+        return int(self.count_subscribers) >= int(other.count_subscribers)
+
+
     def print_info(self):
         """Выводит в консоль информацию о канале."""
         print(json.dumps(self.youtube.channels().list(id=self.channel_id, part='snippet,statistics').execute(),
                          indent=2, ensure_ascii=False))
+
 
     @classmethod
     def get_service(cls) -> build:
         """Возвращающий объект для работы с YouTube API"""
         return build('youtube', 'v3', developerKey=cls.api_key)
 
+
     @property
     def channel_id(self) -> str:
         """Геттер для id канала"""
         return self.__channel_id
+
 
     def to_json(self, filename) -> None:
         """метод, который сохраняет в файл значения атрибутов экземпляра Channel"""
