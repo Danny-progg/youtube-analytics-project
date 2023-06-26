@@ -1,36 +1,40 @@
-from src.channel import Channel
+import os
 
-class Video():
-    def __init__(self, id_video):
-        youtube = Channel.get_service()
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+
+class Video:
+    api_key: str = os.getenv('YT_API_KEY')
+    youtube = build('youtube', 'v3', developerKey=api_key)
+
+    def __init__(self, video_id: str) -> None:
+        self.video_id: str = video_id
         try:
-            video_request = youtube.videos().list(
-                part='snippet,statistics',
-                id=id_video
-            )
-            video_response = video_request.execute()
-            if video_response['items'] == []:
-                raise NoVideoError
+            video_response = self.youtube.videos().list(part='snippet,statistics,contentDetails,topicDetails',
+                                                        id=self.video_id
+                                                        ).execute()
+            if not video_response['items']:
+                raise ValueError("Incorrect Video ID")
 
-        except NoVideoError as e:
-            print('Видео с таким  ID  не существует')
-            self.id_video = id_video
+            self.title: str = video_response['items'][0]['snippet']['title']
+            self.view_count: int = video_response['items'][0]['statistics']['viewCount']
+            self.like_count: int = video_response['items'][0]['statistics']['likeCount']
+            self.comment_count: int = video_response['items'][0]['statistics']['commentCount']
+
+        except (HttpError, ValueError) as e:
+            print(f"Error: {e}")
             self.title = None
-            self.url = None
-            self.views = None
+            self.view_count = None
             self.like_count = None
+            self.comment_count = None
 
-        else:
-            self.id_video = id_video
-            self.title = video_response['items'][0]['snippet']['title']
-            self.url = f'https://www.youtube.com/video/{id_video}'
-            self.views = video_response['items'][0]['statistics']['viewCount']
-            self.like_count = video_response['items'][0]['statistics']['likeCount']
-
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
-class PLVideo(Video):
-    def __init__(self, id_video, id_playlist):
-        super().__init__(id_video)
-        self.id_playlist = id_playlist
 
+
+class PLVideo(Video):
+
+    def __init__(self, video_id: str, playlist_id: str) -> None:
+        super().__init__(video_id)
+        self.playlist_id: str = playlist_id
